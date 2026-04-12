@@ -1,0 +1,26 @@
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Secrets / Environment settings
+.env
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Pytest / Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs and databases
+*.log
+*.sqlite3
+
+# OS generated files
+.DS_Store
+Thumbs.db
