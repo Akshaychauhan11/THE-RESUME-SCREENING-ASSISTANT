@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TalentScreen — Candidate Detail</title>
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+
+<div class="app-wrapper">
+
+  <nav class="navbar">
+    <div class="navbar-logo">
+      <div class="navbar-logo-icon">
+        <svg viewBox="0 0 16 16" fill="none">
+          <rect x="3" y="1" width="8" height="11" rx="1.5" stroke="white" stroke-width="1.2"/>
+          <path d="M5 5h4M5 7.5h4M5 10h2" stroke="white" stroke-width="1" stroke-linecap="round"/>
+          <circle cx="12" cy="12" r="3" fill="#38A169"/>
+          <path d="M10.5 12l1 1 1.5-1.5" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="navbar-logo-text">TalentScreen</span>
+    </div>
+    <div class="navbar-links">
+      <a href="index.html"   class="navbar-link">Dashboard</a>
+      <a href="new-job.html" class="navbar-link active">Jobs</a>
+      <a href="history.html" class="navbar-link">History</a>
+    </div>
+    <div class="navbar-avatar">HR</div>
+  </nav>
+
+  <div class="main-layout">
+
+ 
+    <aside class="sidebar">
+      <a id="backLink" href="results.html" class="text-muted text-small" style="display: flex; align-items: center; gap: 4px; padding: 4px 0; margin-bottom: 8px;">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M8 2L4 6l4 4" stroke="#A0AEC0" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Back to results
+      </a>
+
+      <hr class="divider">
+      <p class="sidebar-section-label">All candidates</p>
+      <div id="sidebarCandidates">
+        <p class="text-muted text-small" style="padding:4px 0;">Loading…</p>
+      </div>
+    </aside>
+
+    <main class="content">
+
+ 
+      <div class="page-header">
+        <div class="flex-center gap-12">
+          <div class="avatar" id="avatarInitials">?</div>
+          <div>
+            <h1 class="page-title" id="candidateName">Loading…</h1>
+            <p class="page-subtitle" id="candidateMeta">—</p>
+          </div>
+        </div>
+        <span class="badge" id="scoreBadge" style="font-size: 12px; padding: 5px 14px;">—</span>
+      </div>
+
+     
+      <div class="two-col">
+
+   
+        <div>
+          <div class="card mb-16">
+            <p class="card-title">Match breakdown</p>
+            <div class="detail-row">
+              <span class="detail-key">Overall score</span>
+              <span class="detail-val text-success" id="detailScore">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Verdict</span>
+              <span class="detail-val" id="detailVerdict">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Match level</span>
+              <span class="detail-val" id="detailLevel">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Algorithm used</span>
+              <span class="detail-val">TF-IDF + Cosine Sim</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Rank</span>
+              <span class="detail-val" id="detailRank">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card mb-16">
+            <p class="card-title">Resume preview</p>
+            <div id="resumePreview" style="background: var(--page-bg); border-radius: var(--radius-md); padding: 14px; font-size: 12px; color: var(--text-secondary); line-height: 1.8; min-height: 160px; white-space: pre-wrap;">
+              Loading…
+            </div>
+          </div>
+
+          <div class="flex-center gap-12">
+            <button class="btn btn-outline" style="flex: 1;" onclick="window.history.back()">
+              ← Back
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  const params      = new URLSearchParams(window.location.search);
+  const candidateId = params.get('candidate_id');
+  const jobId       = params.get('job_id');
+
+
+  if (jobId) {
+    document.getElementById('backLink').href = `results.html?job_id=${jobId}`;
+  }
+
+  async function loadCandidate() {
+    if (!candidateId) {
+      document.getElementById('candidateName').textContent = 'No candidate selected';
+      return;
+    }
+
+    try {
+      const resp = await fetch(`http://127.0.0.1:5000/api/candidates/${candidateId}`);
+      const c    = await resp.json();
+
+      if (c.error) {
+        document.getElementById('candidateName').textContent = c.error;
+        return;
+      }
+
+
+      const words    = c.resume.replace('.pdf','').split(/[\s_\-]+/);
+      const initials = words.slice(0, 2).map(w => w[0]?.toUpperCase() || '').join('');
+      document.getElementById('avatarInitials').textContent = initials || '?';
+
+      document.getElementById('candidateName').textContent = c.resume;
+      document.getElementById('candidateMeta').textContent = `${c.resume} · Rank #${c.rank}`;
+
+      const levelColors = { high: 'badge-high', medium: 'badge-medium', low: 'badge-low' };
+      const badge = document.getElementById('scoreBadge');
+      badge.textContent = `${c.score}% match`;
+      badge.className   = `badge ${levelColors[c.level] || ''}`;
+      badge.style.cssText = 'font-size:12px; padding:5px 14px;';
+
+      document.getElementById('detailScore').textContent   = `${c.score}%`;
+      document.getElementById('detailVerdict').textContent = c.verdict;
+      document.getElementById('detailLevel').textContent   = c.level.charAt(0).toUpperCase() + c.level.slice(1);
+      document.getElementById('detailRank').textContent    = `#${c.rank}`;
+      document.getElementById('resumePreview').textContent = c.raw_text
+        ? c.raw_text.substring(0, 1500) + (c.raw_text.length > 1500 ? '\n\n[preview limited to 1500 chars]' : '')
+        : 'No resume text available.';
+
+    } catch (err) {
+      document.getElementById('candidateName').textContent = 'Cannot reach server. Is backend.py running?';
+    }
+  }
+
+  async function loadSidebar() {
+    if (!jobId) return;
+    try {
+      const resp = await fetch(`http://127.0.0.1:5000/api/jobs/${jobId}/results`);
+      const data = await resp.json();
+      const candidates = data.candidates || [];
+
+      document.getElementById('sidebarCandidates').innerHTML = candidates.map(c => {
+        const isActive = c._id === candidateId ? 'active' : '';
+        return `<a href="candidate.html?candidate_id=${c._id}&job_id=${jobId}" class="sidebar-item ${isActive}">
+          <span class="sidebar-dot" style="background:${c.level==='high'?'#38A169':c.level==='medium'?'#D69E2E':'#CBD5E0'};"></span>
+          ${c.resume.replace('.pdf','')} · ${c.score}%
+        </a>`;
+      }).join('');
+    } catch(e) {}
+  }
+
+  loadCandidate();
+  loadSidebar();
+</script>
+
+</body>
+</html>

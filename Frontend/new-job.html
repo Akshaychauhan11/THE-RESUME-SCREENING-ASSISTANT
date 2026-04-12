@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TalentScreen — New Job Posting</title>
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+
+<div class="app-wrapper">
+
+  <nav class="navbar">
+    <div class="navbar-logo">
+      <div class="navbar-logo-icon">
+        <svg viewBox="0 0 16 16" fill="none">
+          <rect x="3" y="1" width="8" height="11" rx="1.5" stroke="white" stroke-width="1.2"/>
+          <path d="M5 5h4M5 7.5h4M5 10h2" stroke="white" stroke-width="1" stroke-linecap="round"/>
+          <circle cx="12" cy="12" r="3" fill="#38A169"/>
+          <path d="M10.5 12l1 1 1.5-1.5" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="navbar-logo-text">TalentScreen</span>
+    </div>
+    <div class="navbar-links">
+      <a href="index.html"   class="navbar-link">Dashboard</a>
+      <a href="new-job.html" class="navbar-link active">Jobs</a>
+      <a href="history.html" class="navbar-link">History</a>
+    </div>
+    <div class="navbar-avatar">HR</div>
+  </nav>
+
+  <div class="main-layout">
+
+    <aside class="sidebar">
+      <p class="sidebar-section-label">Steps</p>
+
+      <div class="stepper">
+        <div class="step-row">
+          <div class="step-circle active">1</div>
+          <span class="step-label active">Job details</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-row">
+          <div class="step-circle pending">2</div>
+          <span class="step-label pending">Upload resumes</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-row">
+          <div class="step-circle pending">3</div>
+          <span class="step-label pending">Review results</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="content">
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Create new job posting</h1>
+          <p class="page-subtitle">Define the role — the AI uses your job description to match resumes</p>
+        </div>
+      </div>
+
+    
+      <div id="errorMsg" style="display:none; background:#FFF5F5; border:1px solid #FC8181; color:#C53030; padding:10px 14px; border-radius:6px; margin-bottom:16px; font-size:13px;"></div>
+
+     
+      <form id="jobForm">
+        <div class="two-col">
+
+          
+          <div>
+            <div class="form-group">
+              <label class="form-label" for="job-title">Job title</label>
+              <input class="form-input" type="text" id="job-title" name="job_title" placeholder="e.g. Python ML Engineer" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="department">Department</label>
+              <input class="form-input" type="text" id="department" name="department" placeholder="e.g. Engineering">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="emp-type">Employment type</label>
+              <select class="form-select" id="emp-type" name="employment_type">
+                <option>Full-time</option>
+                <option>Part-time</option>
+                <option>Contract</option>
+                <option>Internship</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Key skills</label>
+              <p class="form-hint" style="margin-bottom: 8px;">These will be used as priority keywords during matching</p>
+              
+              <input class="form-input" type="text" name="key_skills" placeholder="e.g. Python, Machine Learning, NLP (comma separated)">
+            </div>
+          </div>
+
+          
+          <div>
+            <div class="form-group">
+              <label class="form-label" for="jd">
+                Job description
+                <span class="text-muted font-medium" style="font-weight: 400;"> — used by AI to score resumes</span>
+              </label>
+              <textarea
+                class="form-textarea"
+                id="jd"
+                name="job_description"
+                rows="13"
+                placeholder="Paste or type the full job description here. The more detailed, the better the AI matching."
+                required
+              ></textarea>
+              <p class="form-hint">Tip: Include required skills, experience level, and responsibilities for best results.</p>
+            </div>
+          </div>
+
+        </div>
+        <
+
+        <hr class="divider" style="margin-top: 24px;">
+
+        <div class="flex-between">
+          <div></div>
+          <button type="submit" class="btn btn-primary" id="nextBtn">
+            Next — Upload resumes
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M3 7h8M7 3l4 4-4 4" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </form>
+
+    </main>
+  </div>
+</div>
+
+<script>
+
+document.getElementById('jobForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const btn    = document.getElementById('nextBtn');
+  const errBox = document.getElementById('errorMsg');
+  errBox.style.display = 'none';
+  btn.disabled  = true;
+  btn.textContent = 'Saving…';
+
+  const formData = new FormData(this);  
+
+  try {
+    const response = await fetch('http://127.0.0.1:5000/api/create-job', {
+      method : 'POST',
+      body   : formData,   
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || data.error) {
+      errBox.textContent  = data.error || 'Something went wrong. Try again.';
+      errBox.style.display = 'block';
+      btn.disabled  = false;
+      btn.textContent = 'Next — Upload resumes';
+      return;
+    }
+
+    
+    window.location.href = 'upload.html?job_id=' + data.job_id;
+
+  } catch (err) {
+    errBox.textContent  = 'Cannot reach the server. Is backend.py running?';
+    errBox.style.display = 'block';
+    btn.disabled  = false;
+    btn.innerHTML = 'Next — Upload resumes <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3l4 4-4 4" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
+});
+</script>
+
+</body>
+</html>

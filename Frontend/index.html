@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TalentScreen — Dashboard</title>
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+
+<div class="app-wrapper">
+
+  <nav class="navbar">
+    <div class="navbar-logo">
+      <div class="navbar-logo-icon">
+        
+        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="1" width="8" height="11" rx="1.5" stroke="white" stroke-width="1.2"/>
+          <path d="M5 5h4M5 7.5h4M5 10h2" stroke="white" stroke-width="1" stroke-linecap="round"/>
+          <circle cx="12" cy="12" r="3" fill="#38A169"/>
+          <path d="M10.5 12l1 1 1.5-1.5" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="navbar-logo-text">TalentScreen</span>
+    </div>
+
+    <div class="navbar-links">
+      <a href="index.html"      class="navbar-link active">Dashboard</a>
+      <a href="new-job.html"    class="navbar-link">Jobs</a>
+      <a href="history.html"    class="navbar-link">History</a>
+
+    </div>
+
+    <div class="navbar-avatar">HR</div>
+  </nav>
+
+  
+  <div class="main-layout">
+
+    
+    <aside class="sidebar">
+      <p class="sidebar-section-label">Main</p>
+
+      <a href="index.html" class="sidebar-item active">
+        <span class="sidebar-dot"></span>
+        Overview
+      </a>
+      <a href="new-job.html" class="sidebar-item">
+        <span class="sidebar-dot"></span>
+        Job postings
+      </a>
+
+      <p class="sidebar-section-label">Reports</p>
+
+      <a href="history.html" class="sidebar-item">
+        <span class="sidebar-dot"></span>
+        Match history
+      </a>
+
+      <p class="sidebar-section-label">Account</p>
+
+
+      <a href="#" class="sidebar-item">
+        <span class="sidebar-dot"></span>
+        Logout
+      </a>
+    </aside>
+
+    
+    <main class="content">
+
+      
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">TalentScreen Dashboard</h1>
+          <p class="page-subtitle">Here's your recruiting overview for today</p>
+        </div>
+        <a href="new-job.html" class="btn btn-primary">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M7 2v10M2 7h10" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          New job posting
+        </a>
+      </div>
+
+      
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <p class="metric-label">Active jobs</p>
+          <p class="metric-value" id="metricJobs">—</p>
+          <p class="metric-sub">From your history</p>
+        </div>
+        <div class="metric-card">
+          <p class="metric-label">Resumes screened</p>
+          <p class="metric-value" id="metricResumes">—</p>
+          <p class="metric-sub">Total across all jobs</p>
+        </div>
+        <div class="metric-card">
+          <p class="metric-label">Total jobs posted</p>
+          <p class="metric-value" id="metricTotal">—</p>
+          <p class="metric-sub">All time</p>
+        </div>
+        <div class="metric-card">
+          <p class="metric-label">Avg match score</p>
+          <p class="metric-value" id="metricAvg">—</p>
+          <p class="metric-sub">Across screened jobs</p>
+        </div>
+      </div>
+
+      
+      <p class="section-label">Recent job postings</p>
+
+      <div class="jobs-grid" id="jobsGrid">
+
+        
+        <div class="job-card">
+          <div class="job-card-top">
+            <span class="job-title">Python ML Engineer</span>
+            <span class="badge badge-active">Active</span>
+          </div>
+          <p class="job-meta">Engineering · Full-time · Posted 3 days ago</p>
+          <div class="job-footer">
+            <span class="job-stat">84 resumes &nbsp;·&nbsp; top match 91%</span>
+            <a href="results.html" class="btn btn-sm">View results</a>
+          </div>
+        </div>
+
+        
+        <div class="job-card">
+          <div class="job-card-top">
+            <span class="job-title">Frontend Developer</span>
+            <span class="badge badge-active">Active</span>
+          </div>
+          <p class="job-meta">Engineering · Full-time · Posted 1 week ago</p>
+          <div class="job-footer">
+            <span class="job-stat">112 resumes &nbsp;·&nbsp; top match 87%</span>
+            <a href="results.html" class="btn btn-sm">View results</a>
+          </div>
+        </div>
+
+        
+        <div class="job-card">
+          <div class="job-card-top">
+            <span class="job-title">HR Business Partner</span>
+            <span class="badge badge-draft">Draft</span>
+          </div>
+          <p class="job-meta">People ops · Full-time · Not published yet</p>
+          <div class="job-footer">
+            <span class="job-stat">0 resumes uploaded</span>
+            <a href="new-job.html" class="btn btn-sm">Continue</a>
+          </div>
+        </div>
+
+        
+        <div class="job-card">
+          <div class="job-card-top">
+            <span class="job-title">Data Analyst</span>
+            <span class="badge badge-closed">Closed</span>
+          </div>
+          <p class="job-meta">Analytics · Contract · Closed 2 weeks ago</p>
+          <div class="job-footer">
+            <span class="job-stat">51 resumes &nbsp;·&nbsp; hired 1</span>
+            <a href="#" class="btn btn-sm">Archive</a>
+          </div>
+        </div>
+
+      </div>
+      
+
+    </main>
+  </div>
+</div>
+
+<script>
+  async function loadDashboard() {
+    try {
+      const resp = await fetch('http://127.0.0.1:5000/api/history');
+      const jobs = await resp.json();
+
+      const totalJobs    = jobs.length;
+      const totalResumes = jobs.reduce((s, j) => s + (j.resume_count || 0), 0);
+      const scored       = jobs.filter(j => j.top_score != null);
+      const avgScore     = scored.length
+        ? Math.round(scored.reduce((s, j) => s + j.top_score, 0) / scored.length)
+        : 0;
+      const activeJobs   = jobs.filter(j => (j.status || 'active') === 'active').length;
+
+      document.getElementById('metricJobs').textContent    = activeJobs;
+      document.getElementById('metricResumes').textContent = totalResumes;
+      document.getElementById('metricTotal').textContent   = totalJobs;
+      document.getElementById('metricAvg').textContent     = scored.length ? avgScore + '%' : '—';
+
+      const grid = document.getElementById('jobsGrid');
+      if (!jobs.length) {
+        grid.innerHTML = '<p style="color:var(--text-muted); padding:16px;">No jobs yet. Create your first job posting!</p>';
+        return;
+      }
+
+      grid.innerHTML = jobs.slice(0, 6).map(job => {
+        const date       = new Date(job.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        const topScore   = job.top_score != null ? ` &nbsp;·&nbsp; top match ${job.top_score}%` : '';
+        const status     = job.status || 'active';
+        const badgeClass = status === 'active' ? 'badge-active' : status === 'draft' ? 'badge-draft' : 'badge-closed';
+        const viewLink   = job.resume_count > 0
+          ? `<a href="results.html?job_id=${job._id}" class="btn btn-sm">View results</a>`
+          : `<a href="upload.html?job_id=${job._id}" class="btn btn-sm">Upload resumes</a>`;
+        return `
+          <div class="job-card">
+            <div class="job-card-top">
+              <span class="job-title">${job.job_title}</span>
+              <span class="badge ${badgeClass}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
+            </div>
+            <p class="job-meta">Posted ${date}</p>
+            <div class="job-footer">
+              <span class="job-stat">${job.resume_count || 0} resumes${topScore}</span>
+              ${viewLink}
+            </div>
+          </div>`;
+      }).join('');
+
+    } catch (err) {
+      document.getElementById('jobsGrid').innerHTML =
+        '<p style="color:red; padding:16px;">Cannot reach server. Is backend.py running?</p>';
+    }
+  }
+  loadDashboard();
+</script>
+
+</body>
+</html>

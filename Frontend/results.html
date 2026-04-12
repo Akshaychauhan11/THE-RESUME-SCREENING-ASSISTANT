@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TalentScreen — Results</title>
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+
+<div class="app-wrapper">
+
+  <nav class="navbar">
+    <div class="navbar-logo">
+      <div class="navbar-logo-icon">
+        <svg viewBox="0 0 16 16" fill="none">
+          <rect x="3" y="1" width="8" height="11" rx="1.5" stroke="white" stroke-width="1.2"/>
+          <path d="M5 5h4M5 7.5h4M5 10h2" stroke="white" stroke-width="1" stroke-linecap="round"/>
+          <circle cx="12" cy="12" r="3" fill="#38A169"/>
+          <path d="M10.5 12l1 1 1.5-1.5" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="navbar-logo-text">TalentScreen</span>
+    </div>
+    <div class="navbar-links">
+      <a href="index.html"   class="navbar-link">Dashboard</a>
+      <a href="new-job.html" class="navbar-link active">Jobs</a>
+      <a href="history.html" class="navbar-link">History</a>
+    </div>
+    <div class="navbar-avatar">HR</div>
+  </nav>
+
+  <div class="main-layout">
+
+    
+    <aside class="sidebar">
+      <p class="sidebar-meta-label">Job</p>
+      <p class="sidebar-meta-value" id="sidebarJobTitle">Loading…</p>
+      <p class="sidebar-meta-sub" id="sidebarResumeCount">—</p>
+
+      <hr class="divider">
+
+      <p class="sidebar-section-label">Filter by match</p>
+
+      <a href="#" class="sidebar-item active" onclick="filterResults('all', this)">
+        <span class="sidebar-dot"></span>
+        <span id="filterAll">All</span>
+      </a>
+      <a href="#" class="sidebar-item" onclick="filterResults('high', this)">
+        <span class="sidebar-dot" style="background: #38A169;"></span>
+        <span id="filterHigh">High 70%+</span>
+      </a>
+      <a href="#" class="sidebar-item" onclick="filterResults('medium', this)">
+        <span class="sidebar-dot" style="background: #D69E2E;"></span>
+        <span id="filterMedium">Medium 40–69%</span>
+      </a>
+      <a href="#" class="sidebar-item" onclick="filterResults('low', this)">
+        <span class="sidebar-dot" style="background: #CBD5E0;"></span>
+        <span id="filterLow">Low &lt;40%</span>
+      </a>
+
+      <hr class="divider">
+
+      <button class="btn btn-outline" style="width: 100%; font-size: 11px; padding: 7px 12px;" onclick="exportCSV()">
+        Export CSV
+      </button>
+    </aside>
+
+    <main class="content">
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Screening results</h1>
+          <p class="page-subtitle" id="pageSubtitle">Loading…</p>
+        </div>
+        <button class="btn btn-outline" style="font-size: 11px; padding: 6px 12px;" onclick="exportCSV()">Export CSV</button>
+      </div>
+
+     
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 40px;">#</th>
+              <th>Candidate (filename)</th>
+              <th style="width: 200px;">Match score</th>
+              <th style="width: 120px;">Verdict</th>
+              <th style="width: 70px;"></th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody">
+            
+            <tr><td colspan="5" style="text-align:center; padding: 32px; color: var(--text-muted);">Loading results…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="table-footnote" id="tableFootnote">Screened using TF-IDF + Cosine Similarity &nbsp;·&nbsp; Python Flask ML backend</p>
+
+    </main>
+  </div>
+</div>
+
+<script>
+ 
+  const urlParams = new URLSearchParams(window.location.search);
+  const jobId     = urlParams.get('job_id');
+
+
+  let allCandidates = [];
+  let jobTitle      = '';
+
+  async function loadResults() {
+    if (!jobId) {
+      document.getElementById('resultsBody').innerHTML =
+        '<tr><td colspan="5" style="text-align:center; padding:32px; color:red;">No job_id in URL. Go back and run screening first.</td></tr>';
+      return;
+    }
+
+    try {
+      
+      const resp = await fetch(`http://127.0.0.1:5000/api/jobs/${jobId}/results`);
+      const data = await resp.json();
+
+      if (data.error) {
+        document.getElementById('resultsBody').innerHTML =
+          `<tr><td colspan="5" style="text-align:center; color:red;">${data.error}</td></tr>`;
+        return;
+      }
+
+      jobTitle      = data.job.job_title;
+      allCandidates = data.candidates;
+
+      document.getElementById('pageSubtitle').textContent =
+        `Ranked by AI match score · ${jobTitle}`;
+      document.getElementById('sidebarJobTitle').textContent = jobTitle;
+      document.getElementById('sidebarResumeCount').textContent =
+        `${allCandidates.length} resumes screened`;
+
+      
+      const high   = allCandidates.filter(c => c.level === 'high').length;
+      const medium = allCandidates.filter(c => c.level === 'medium').length;
+      const low    = allCandidates.filter(c => c.level === 'low').length;
+      document.getElementById('filterAll').textContent    = `All (${allCandidates.length})`;
+      document.getElementById('filterHigh').textContent   = `High 70%+ (${high})`;
+      document.getElementById('filterMedium').textContent = `Medium 40–69% (${medium})`;
+      document.getElementById('filterLow').textContent    = `Low <40% (${low})`;
+
+      renderTable(allCandidates);
+
+    } catch (err) {
+      document.getElementById('resultsBody').innerHTML =
+        '<tr><td colspan="5" style="text-align:center; color:red;">Cannot reach server. Is backend.py running?</td></tr>';
+    }
+  }
+
+  function renderTable(candidates) {
+    const tbody = document.getElementById('resultsBody');
+
+    if (candidates.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:32px; color:var(--text-muted);">No candidates match this filter.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = candidates.map((c, i) => {
+      const rank  = c.rank;
+      const score = c.score;
+      const level = c.level;   
+      const badgeClass = level === 'high' ? 'badge-high' : level === 'medium' ? 'badge-medium' : 'badge-low';
+      const barClass   = level;
+
+      return `
+        <tr data-level="${level}">
+          <td><span class="td-rank">#${rank}</span></td>
+          <td>
+            <div class="td-name">${c.resume}</div>
+            <div class="td-sub">${c.job_title || jobTitle}</div>
+          </td>
+          <td>
+            <div class="score-bar-wrap">
+              <div class="score-bar-track">
+                <div class="score-bar-fill ${barClass}" style="width: ${score}%;"></div>
+              </div>
+              <span class="score-val ${barClass}">${score}%</span>
+            </div>
+          </td>
+          <td><span class="badge ${badgeClass}">${c.verdict}</span></td>
+          <td><a href="candidate.html?candidate_id=${c._id}&job_id=${jobId}" class="btn btn-sm">View</a></td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+ 
+  function filterResults(level, el) {
+    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+
+    const filtered = level === 'all'
+      ? allCandidates
+      : allCandidates.filter(c => c.level === level);
+
+    renderTable(filtered);
+    return false;
+  }
+
+  
+  function exportCSV() {
+    const headers = ['Rank', 'Resume', 'Score', 'Verdict'];
+    const rows    = allCandidates.map(c => [c.rank, c.resume, c.score + '%', c.verdict]);
+    const csv     = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob    = new Blob([csv], { type: 'text/csv' });
+    const url     = URL.createObjectURL(blob);
+    const a       = document.createElement('a');
+    a.href        = url;
+    a.download    = `${jobTitle}_results.csv`;
+    a.click();
+  }
+
+ 
+  loadResults();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TalentScreen — History</title>
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+
+<div class="app-wrapper">
+
+  <nav class="navbar">
+    <div class="navbar-logo">
+      <div class="navbar-logo-icon">
+        <svg viewBox="0 0 16 16" fill="none">
+          <rect x="3" y="1" width="8" height="11" rx="1.5" stroke="white" stroke-width="1.2"/>
+          <path d="M5 5h4M5 7.5h4M5 10h2" stroke="white" stroke-width="1" stroke-linecap="round"/>
+          <circle cx="12" cy="12" r="3" fill="#38A169"/>
+          <path d="M10.5 12l1 1 1.5-1.5" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="navbar-logo-text">TalentScreen</span>
+    </div>
+    <div class="navbar-links">
+      <a href="index.html"   class="navbar-link">Dashboard</a>
+      <a href="new-job.html" class="navbar-link">Jobs</a>
+      <a href="history.html" class="navbar-link active">History</a>
+    </div>
+    <div class="navbar-avatar">HR</div>
+  </nav>
+
+  <div class="main-layout">
+
+    <aside class="sidebar">
+      <p class="sidebar-section-label">Time range</p>
+      <a href="#" class="sidebar-item active"><span class="sidebar-dot"></span> All time</a>
+      <a href="#" class="sidebar-item"><span class="sidebar-dot"></span> This month</a>
+      <a href="#" class="sidebar-item"><span class="sidebar-dot"></span> This week</a>
+
+      <p class="sidebar-section-label">Status</p>
+      <a href="#" class="sidebar-item active"><span class="sidebar-dot"></span> All</a>
+      <a href="#" class="sidebar-item">
+        <span class="sidebar-dot" style="background: #38A169;"></span> Active
+      </a>
+      <a href="#" class="sidebar-item">
+        <span class="sidebar-dot" style="background: #CBD5E0;"></span> Closed
+      </a>
+    </aside>
+
+    <main class="content">
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Search history</h1>
+          <p class="page-subtitle">All past screening sessions saved to your account</p>
+        </div>
+        <input
+          class="form-input"
+          type="text"
+          placeholder="Search by job title…"
+          style="width: 220px;"
+          oninput="filterHistory(this.value)"
+        >
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Job title</th>
+              <th>Date</th>
+              <th>Resumes</th>
+              <th>Top match</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr><td colspan="6" style="text-align:center; padding:32px; color:var(--text-muted);">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="table-footnote">Screening sessions stored in MongoDB &nbsp;·&nbsp; TalentScreen</p>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  let allRows = [];  
+
+  async function loadHistory() {
+    try {
+      
+      const resp = await fetch('http://127.0.0.1:5000/api/history');
+      const jobs = await resp.json();
+      allRows = jobs;
+      renderHistory(jobs);
+    } catch (err) {
+      document.getElementById('historyBody').innerHTML =
+        '<tr><td colspan="6" style="text-align:center;color:red;">Cannot reach server. Is backend.py running?</td></tr>';
+    }
+  }
+
+  function renderHistory(jobs) {
+    const tbody = document.getElementById('historyBody');
+    if (!jobs.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:32px; color:var(--text-muted);">No screening sessions yet. Create a job and upload resumes!</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = jobs.map(job => {
+      const date      = new Date(job.created_at).toLocaleDateString('en-IN', {
+        day: 'numeric', month: 'short', year: 'numeric'
+      });
+      const topScore  = job.top_score != null ? job.top_score + '%' : '—';
+      const status    = job.status || 'active';
+      const badgeClass = status === 'active' ? 'badge-active' : 'badge-closed';
+
+      return `
+        <tr data-title="${job.job_title.toLowerCase()}">
+          <td><span class="td-name">${job.job_title}</span></td>
+          <td class="text-muted text-small">${date}</td>
+          <td>${job.resume_count || 0}</td>
+          <td style="color: var(--success-dark); font-weight: 500; font-size: 12px;">${topScore}</td>
+          <td><span class="badge ${badgeClass}">${status.charAt(0).toUpperCase() + status.slice(1)}</span></td>
+          <td><a href="results.html?job_id=${job._id}" class="btn btn-sm">View</a></td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  
+  function filterHistory(query) {
+    const q = query.toLowerCase();
+    const filtered = allRows.filter(j => j.job_title.toLowerCase().includes(q));
+    renderHistory(filtered);
+  }
+
+  loadHistory();
+</script>
+
+</body>
+</html>
