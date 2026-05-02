@@ -27,23 +27,23 @@
       <a href="new-job.html" class="navbar-link">Jobs</a>
       <a href="history.html" class="navbar-link active">History</a>
     </div>
-    <div class="navbar-avatar">HR</div>
+    <div class="navbar-avatar" id="avatarBtn">HR</div>
   </nav>
 
   <div class="main-layout">
 
     <aside class="sidebar">
       <p class="sidebar-section-label">Time range</p>
-      <a href="#" class="sidebar-item active"><span class="sidebar-dot"></span> All time</a>
-      <a href="#" class="sidebar-item"><span class="sidebar-dot"></span> This month</a>
-      <a href="#" class="sidebar-item"><span class="sidebar-dot"></span> This week</a>
+      <a href="#" class="sidebar-item active" onclick="setFilter('time','all',this)"><span class="sidebar-dot"></span> All time</a>
+      <a href="#" class="sidebar-item" onclick="setFilter('time','month',this)"><span class="sidebar-dot"></span> This month</a>
+      <a href="#" class="sidebar-item" onclick="setFilter('time','week',this)"><span class="sidebar-dot"></span> This week</a>
 
       <p class="sidebar-section-label">Status</p>
-      <a href="#" class="sidebar-item active"><span class="sidebar-dot"></span> All</a>
-      <a href="#" class="sidebar-item">
+      <a href="#" class="sidebar-item active" onclick="setFilter('status','all',this)"><span class="sidebar-dot"></span> All</a>
+      <a href="#" class="sidebar-item" onclick="setFilter('status','active',this)">
         <span class="sidebar-dot" style="background: #38A169;"></span> Active
       </a>
-      <a href="#" class="sidebar-item">
+      <a href="#" class="sidebar-item" onclick="setFilter('status','closed',this)">
         <span class="sidebar-dot" style="background: #CBD5E0;"></span> Closed
       </a>
     </aside>
@@ -89,18 +89,24 @@
 </div>
 
 <script>
+  const BACKEND = 'http://127.0.0.1:5000';
+
+  
+  fetch(`${BACKEND}/api/me`, { credentials: 'include' })
+    .then(r => { if (!r.ok) window.location.href = 'login.html'; })
+    .catch(() => { window.location.href = 'login.html'; });
+
   let allRows = [];  
 
   async function loadHistory() {
     try {
-      
-      const resp = await fetch('http://127.0.0.1:5000/api/history');
+      const resp = await fetch(`${BACKEND}/api/history`, { credentials: 'include' });
       const jobs = await resp.json();
       allRows = jobs;
       renderHistory(jobs);
     } catch (err) {
       document.getElementById('historyBody').innerHTML =
-        '<tr><td colspan="6" style="text-align:center;color:red;">Cannot reach server. Is backend.py running?</td></tr>';
+        '<tr><td colspan="6" style="text-align:center;color:red;">Cannot reach server. Is app.py running?</td></tr>';
     }
   }
 
@@ -133,8 +139,54 @@
   }
 
   
+  let activeTime   = 'all';
+  let activeStatus = 'all';
+
+  function setFilter(type, value, el) {
+    
+    const label = type === 'time' ? 'Time range' : 'Status';
+    document.querySelectorAll('.sidebar-item').forEach(a => {
+      if (a.getAttribute('onclick') && a.getAttribute('onclick').includes(`'${type}'`)) {
+        a.classList.remove('active');
+      }
+    });
+    el.classList.add('active');
+
+    if (type === 'time')   activeTime   = value;
+    if (type === 'status') activeStatus = value;
+
+    applyFilters();
+    return false;
+  }
+
+  function applyFilters() {
+    const now   = new Date();
+    let filtered = allRows;
+
+    
+    if (activeTime === 'month') {
+      filtered = filtered.filter(j => {
+        const d = new Date(j.created_at);
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      });
+    } else if (activeTime === 'week') {
+      const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+      filtered = filtered.filter(j => new Date(j.created_at) >= weekAgo);
+    }
+
+    
+    if (activeStatus !== 'all') {
+      filtered = filtered.filter(j => (j.status || 'active') === activeStatus);
+    }
+
+    renderHistory(filtered);
+  }
+
+
   function filterHistory(query) {
     const q = query.toLowerCase();
+    activeTime   = 'all';
+    activeStatus = 'all';
     const filtered = allRows.filter(j => j.job_title.toLowerCase().includes(q));
     renderHistory(filtered);
   }

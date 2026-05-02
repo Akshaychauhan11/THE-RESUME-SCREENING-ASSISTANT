@@ -76,7 +76,7 @@
         <button class="btn btn-outline" style="font-size: 11px; padding: 6px 12px;" onclick="exportCSV()">Export CSV</button>
       </div>
 
-     
+      
       <div class="table-wrap">
         <table>
           <thead>
@@ -95,7 +95,7 @@
         </table>
       </div>
 
-      <p class="table-footnote" id="tableFootnote">Screened using TF-IDF + Cosine Similarity &nbsp;·&nbsp; Python Flask ML backend</p>
+      <p class="table-footnote" id="tableFootnote">Screened using Sentence Transformers + Keyword Precision &nbsp;·&nbsp; Python Flask ML backend</p>
 
     </main>
   </div>
@@ -103,9 +103,14 @@
 
 <script>
  
+  const BACKEND = 'http://127.0.0.1:5000';
   const urlParams = new URLSearchParams(window.location.search);
   const jobId     = urlParams.get('job_id');
 
+  
+  fetch(`${BACKEND}/api/me`, { credentials: 'include' })
+    .then(r => { if (!r.ok) window.location.href = 'login.html'; })
+    .catch(() => { window.location.href = 'login.html'; });
 
   let allCandidates = [];
   let jobTitle      = '';
@@ -119,7 +124,7 @@
 
     try {
       
-      const resp = await fetch(`http://127.0.0.1:5000/api/jobs/${jobId}/results`);
+      const resp = await fetch(`${BACKEND}/api/jobs/${jobId}/results`, { credentials: 'include' });
       const data = await resp.json();
 
       if (data.error) {
@@ -131,6 +136,7 @@
       jobTitle      = data.job.job_title;
       allCandidates = data.candidates;
 
+      
       document.getElementById('pageSubtitle').textContent =
         `Ranked by AI match score · ${jobTitle}`;
       document.getElementById('sidebarJobTitle').textContent = jobTitle;
@@ -191,7 +197,7 @@
     }).join('');
   }
 
- 
+  
   function filterResults(level, el) {
     document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
     el.classList.add('active');
@@ -217,7 +223,6 @@
     a.click();
   }
 
- 
   loadResults();
 </script>
 

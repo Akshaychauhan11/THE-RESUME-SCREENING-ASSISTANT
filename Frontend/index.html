@@ -10,6 +10,7 @@
 
 <div class="app-wrapper">
 
+  
   <nav class="navbar">
     <div class="navbar-logo">
       <div class="navbar-logo-icon">
@@ -31,7 +32,22 @@
 
     </div>
 
-    <div class="navbar-avatar">HR</div>
+    
+    <div class="navbar-avatar" id="avatarBtn" onclick="toggleDropdown()">
+      <span id="avatarInitials">HR</span>
+      <div class="avatar-dropdown" id="avatarDropdown">
+        <div class="avatar-dd-header">
+          <div class="avatar-dd-name" id="ddName">HR Admin</div>
+          <div class="avatar-dd-email" id="ddEmail">Loading...</div>
+        </div>
+        <div class="avatar-dd-item danger" onclick="logout(event)">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M5 2H3a1 1 0 00-1 1v8a1 1 0 001 1h2M10 10l3-3-3-3M13 7H5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Logout
+        </div>
+      </div>
+    </div>
   </nav>
 
   
@@ -60,7 +76,7 @@
       <p class="sidebar-section-label">Account</p>
 
 
-      <a href="#" class="sidebar-item">
+      <a href="#" class="sidebar-item" id="logoutBtn" onclick="logout(event)">
         <span class="sidebar-dot"></span>
         Logout
       </a>
@@ -172,9 +188,16 @@
 </div>
 
 <script>
+  const BACKEND = 'http://127.0.0.1:5000';
+
+  
+  fetch(`${BACKEND}/api/me`, { credentials: 'include' })
+    .then(r => { if (!r.ok) window.location.href = 'login.html'; })
+    .catch(() => { window.location.href = 'login.html'; });
+
   async function loadDashboard() {
     try {
-      const resp = await fetch('http://127.0.0.1:5000/api/history');
+      const resp = await fetch(`${BACKEND}/api/history`, { credentials: 'include' });
       const jobs = await resp.json();
 
       const totalJobs    = jobs.length;
@@ -220,10 +243,50 @@
 
     } catch (err) {
       document.getElementById('jobsGrid').innerHTML =
-        '<p style="color:red; padding:16px;">Cannot reach server. Is backend.py running?</p>';
+        '<p style="color:red; padding:16px;">Cannot reach server. Is app.py running?</p>';
     }
   }
   loadDashboard();
+
+  
+  const BACKEND = 'http://127.0.0.1:5000';
+
+  
+  fetch(`${BACKEND}/api/me`, { credentials: 'include' })
+    .then(r => r.json())
+    .then(data => {
+      if (data.name) {
+        const initials = data.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+        document.getElementById('avatarInitials').textContent = initials;
+        document.getElementById('ddName').textContent  = data.name;
+        document.getElementById('ddEmail').textContent = data.email;
+      } else {
+        window.location.href = 'login.html';
+      }
+    })
+    .catch(() => { window.location.href = 'login.html'; });
+
+  function toggleDropdown() {
+    document.getElementById('avatarDropdown').classList.toggle('open');
+  }
+
+  
+  document.addEventListener('click', function(e) {
+    const btn = document.getElementById('avatarBtn');
+    if (!btn.contains(e.target)) {
+      document.getElementById('avatarDropdown').classList.remove('open');
+    }
+  });
+
+  
+  async function logout(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await fetch(`${BACKEND}/logout`, { credentials: 'include' });
+    } catch (_) {}
+    window.location.href = 'login.html';
+  }
 </script>
 
 </body>

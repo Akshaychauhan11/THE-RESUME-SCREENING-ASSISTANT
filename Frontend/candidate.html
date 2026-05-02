@@ -32,7 +32,7 @@
 
   <div class="main-layout">
 
- 
+    
     <aside class="sidebar">
       <a id="backLink" href="results.html" class="text-muted text-small" style="display: flex; align-items: center; gap: 4px; padding: 4px 0; margin-bottom: 8px;">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -50,7 +50,7 @@
 
     <main class="content">
 
- 
+      
       <div class="page-header">
         <div class="flex-center gap-12">
           <div class="avatar" id="avatarInitials">?</div>
@@ -62,10 +62,10 @@
         <span class="badge" id="scoreBadge" style="font-size: 12px; padding: 5px 14px;">—</span>
       </div>
 
-     
+      
       <div class="two-col">
 
-   
+        
         <div>
           <div class="card mb-16">
             <p class="card-title">Match breakdown</p>
@@ -83,7 +83,7 @@
             </div>
             <div class="detail-row">
               <span class="detail-key">Algorithm used</span>
-              <span class="detail-val">TF-IDF + Cosine Sim</span>
+              <span class="detail-val">Sentence Transformers + Keyword Precision</span>
             </div>
             <div class="detail-row">
               <span class="detail-key">Rank</span>
@@ -92,6 +92,7 @@
           </div>
         </div>
 
+        
         <div>
           <div class="card mb-16">
             <p class="card-title">Resume preview</p>
@@ -114,11 +115,17 @@
 </div>
 
 <script>
+  const BACKEND     = 'http://127.0.0.1:5000';
   const params      = new URLSearchParams(window.location.search);
   const candidateId = params.get('candidate_id');
   const jobId       = params.get('job_id');
 
+  
+  fetch(`${BACKEND}/api/me`, { credentials: 'include' })
+    .then(r => { if (!r.ok) window.location.href = 'login.html'; })
+    .catch(() => { window.location.href = 'login.html'; });
 
+  
   if (jobId) {
     document.getElementById('backLink').href = `results.html?job_id=${jobId}`;
   }
@@ -130,7 +137,8 @@
     }
 
     try {
-      const resp = await fetch(`http://127.0.0.1:5000/api/candidates/${candidateId}`);
+      
+      const resp = await fetch(`${BACKEND}/api/candidates/${candidateId}`, { credentials: 'include' });
       const c    = await resp.json();
 
       if (c.error) {
@@ -138,13 +146,14 @@
         return;
       }
 
-
-      const words    = c.resume.replace('.pdf','').split(/[\s_\-]+/);
+      
+      const cleanName = c.resume.replace(/\.pdf$/i, '').replace(/[_\-]/g, ' ');
+      const words    = cleanName.split(/\s+/);
       const initials = words.slice(0, 2).map(w => w[0]?.toUpperCase() || '').join('');
       document.getElementById('avatarInitials').textContent = initials || '?';
 
-      document.getElementById('candidateName').textContent = c.resume;
-      document.getElementById('candidateMeta').textContent = `${c.resume} · Rank #${c.rank}`;
+      document.getElementById('candidateName').textContent = cleanName;
+      document.getElementById('candidateMeta').textContent = `${cleanName} · Rank #${c.rank}`;
 
       const levelColors = { high: 'badge-high', medium: 'badge-medium', low: 'badge-low' };
       const badge = document.getElementById('scoreBadge');
@@ -168,7 +177,7 @@
   async function loadSidebar() {
     if (!jobId) return;
     try {
-      const resp = await fetch(`http://127.0.0.1:5000/api/jobs/${jobId}/results`);
+      const resp = await fetch(`${BACKEND}/api/jobs/${jobId}/results`, { credentials: 'include' });
       const data = await resp.json();
       const candidates = data.candidates || [];
 

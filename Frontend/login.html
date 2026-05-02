@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TalentScreen — Sign In</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <style>
+    
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: #EBF0F7;
+      padding: 24px;
+      cursor: default;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .login-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      width: 100%;
+      max-width: 900px;
+      min-height: 540px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 32px rgba(27, 47, 78, 0.12);
+    }
+
+    
+    .left-panel {
+      background: var(--navy);
+      padding: 44px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 44px;
+    }
+
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .brand-name {
+      font-size: 16px;
+      font-weight: 500;
+      color: #fff;
+      letter-spacing: -0.01em;
+    }
+
+    .left-headline {
+      font-size: 24px;
+      font-weight: 500;
+      color: #fff;
+      line-height: 1.35;
+      margin-bottom: 14px;
+      letter-spacing: -0.02em;
+    }
+
+    .left-sub {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.5);
+      line-height: 1.75;
+      margin-bottom: 36px;
+    }
+
+    .stat-row {
+      display: flex;
+      gap: 28px;
+      margin-bottom: 36px;
+      padding-bottom: 28px;
+      border-bottom: 0.5px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .stat-num {
+      font-size: 22px;
+      font-weight: 500;
+      color: #fff;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.38);
+    }
+
+    .features {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+
+    .feat-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .feat-check {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(56, 161, 105, 0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .feat-text {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.58);
+      line-height: 1.4;
+    }
+
+    .left-footer {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.22);
+      padding-top: 24px;
+      margin-top: 28px;
+      border-top: 0.5px solid rgba(255, 255, 255, 0.07);
+    }
+
+    
+    .right-panel {
+      background: #fff;
+      padding: 44px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .form-eyebrow {
+      font-size: 10px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--blue);
+      margin-bottom: 10px;
+    }
+
+    .form-title {
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+      letter-spacing: -0.01em;
+    }
+
+    .form-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+    }
+
+    
+    .error-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--danger-light);
+      border: 0.5px solid #FED7D7;
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      font-size: 12px;
+      color: var(--danger-dark);
+      margin-bottom: 16px;
+    }
+
+    .login-form-group {
+      margin-bottom: 14px;
+    }
+
+    .login-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 10px 13px;
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      color: var(--text-primary);
+      background: #fff;
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-md);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .login-input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(44, 82, 130, 0.08);
+    }
+
+    .login-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    
+    .pw-wrap {
+      position: relative;
+    }
+
+    .pw-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      color: var(--text-muted);
+      padding: 2px 4px;
+      transition: color 0.12s;
+    }
+
+    .pw-toggle:hover {
+      color: var(--blue);
+    }
+
+    
+    .options-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+      margin-top: 4px;
+    }
+
+    .remember-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .remember-label input[type="checkbox"] {
+      accent-color: var(--navy);
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+    }
+
+    .forgot-link {
+      font-size: 12px;
+      color: var(--blue);
+      cursor: pointer;
+      transition: opacity 0.12s;
+    }
+
+    .forgot-link:hover {
+      opacity: 0.75;
+      text-decoration: underline;
+    }
+
+    
+    .btn-signin {
+      width: 100%;
+      padding: 11px;
+      background: var(--navy);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      letter-spacing: 0.01em;
+      transition: background 0.15s, transform 0.1s;
+      margin-bottom: 18px;
+    }
+
+    .btn-signin:hover {
+      background: var(--blue);
+    }
+
+    .btn-signin:active {
+      transform: scale(0.99);
+    }
+
+    .btn-signin:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    
+    .or-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .or-line {
+      flex: 1;
+      height: 0.5px;
+      background: var(--border);
+    }
+
+    .or-text {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    
+    .no-signup {
+      background: var(--page-bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.75;
+    }
+
+    .no-signup strong {
+      font-weight: 500;
+      color: var(--text-secondary);
+      display: block;
+      margin-bottom: 2px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="login-wrapper">
+
+   
+    <div class="left-panel">
+
+      <div>
+        
+        <div class="brand">
+          <div class="brand-icon">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+              <rect x="3" y="1" width="8" height="11" rx="1.5" stroke="white" stroke-width="1.2" />
+              <path d="M5 5h4M5 7.5h4M5 10h2" stroke="white" stroke-width="1" stroke-linecap="round" />
+              <circle cx="12" cy="12" r="3" fill="#38A169" />
+              <path d="M10.5 12l1 1 1.5-1.5" stroke="white" stroke-width="1" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+          </div>
+          <span class="brand-name">TalentScreen</span>
+        </div>
+
+        
+        <h1 class="left-headline">Hire the right people,<br>faster than ever.</h1>
+        <p class="left-sub">
+          Your intelligent recruitment assistant. Upload resumes,
+          define the role, and let TalentScreen surface the best
+          candidates — in seconds, not hours.
+        </p>
+
+        
+        <div class="stat-row">
+          <div>
+            <div class="stat-num">10×</div>
+            <div class="stat-label">Faster screening</div>
+          </div>
+          <div>
+            <div class="stat-num">100s</div>
+            <div class="stat-label">Resumes at once</div>
+          </div>
+          <div>
+            <div class="stat-num">0</div>
+            <div class="stat-label">Manual sorting</div>
+          </div>
+        </div>
+
+        
+        <div class="features">
+          <div class="feat-item">
+            <div class="feat-check">
+              <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                <path d="M1.5 4.5l2 2 4-4" stroke="#38A169" stroke-width="1.3" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+            </div>
+            <span class="feat-text">Automatically ranks candidates by job fit</span>
+          </div>
+          <div class="feat-item">
+            <div class="feat-check">
+              <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                <path d="M1.5 4.5l2 2 4-4" stroke="#38A169" stroke-width="1.3" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+            </div>
+            <span class="feat-text">Supports bulk PDF resume uploads</span>
+          </div>
+          <div class="feat-item">
+            <div class="feat-check">
+              <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                <path d="M1.5 4.5l2 2 4-4" stroke="#38A169" stroke-width="1.3" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+            </div>
+            <span class="feat-text">Saves every search session to history</span>
+          </div>
+          <div class="feat-item">
+            <div class="feat-check">
+              <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                <path d="M1.5 4.5l2 2 4-4" stroke="#38A169" stroke-width="1.3" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+            </div>
+            <span class="feat-text">Highlights matched skills per candidate</span>
+          </div>
+          <div class="feat-item">
+            <div class="feat-check">
+              <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                <path d="M1.5 4.5l2 2 4-4" stroke="#38A169" stroke-width="1.3" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+            </div>
+            <span class="feat-text">Shortlist top candidates with one click</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="left-footer">
+        TalentScreen &nbsp;·&nbsp; Internal HR Tool &nbsp;·&nbsp; Authorized personnel only
+      </div>
+    </div>
+
+  
+    <div class="right-panel">
+
+      <p class="form-eyebrow">HR Portal</p>
+      <h2 class="form-title">Sign in to your account</h2>
+      <p class="form-sub">Enter your company credentials to continue</p>
+
+      <div class="error-box" id="errorBox" style="display: none;">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <circle cx="7" cy="7" r="6" stroke="#C53030" stroke-width="1.2" />
+          <path d="M7 4v3M7 9.5v.5" stroke="#C53030" stroke-width="1.3" stroke-linecap="round" />
+        </svg>
+        <span id="errorMsg">Invalid email or password. Please try again.</span>
+      </div>
+
+      <form id="loginForm">
+
+        <div class="login-form-group">
+          <label class="login-label" for="email">Work email</label>
+          <input class="login-input" type="email" id="email" name="email" placeholder="you@company.com" required
+            autocomplete="email">
+        </div>
+
+        <div class="login-form-group">
+          <label class="login-label" for="password">Password</label>
+          <div class="pw-wrap">
+            <input class="login-input" type="password" id="password" name="password" placeholder="Enter your password"
+              required autocomplete="current-password" style="padding-right: 52px;">
+            <button type="button" class="pw-toggle" id="pwToggle" onclick="togglePassword()">
+              Show
+            </button>
+          </div>
+        </div>
+
+        <div class="options-row">
+          <label class="remember-label">
+            <input type="checkbox" id="rememberMe" name="remember" value="true" checked>
+            Remember me for 7 days
+          </label>
+        </div>
+
+        <button type="submit" class="btn-signin" id="signinBtn">Sign in</button>
+
+      </form>
+
+      <div class="or-divider">
+        <div class="or-line"></div>
+        <span class="or-text">or</span>
+        <div class="or-line"></div>
+      </div>
+
+      <div class="no-signup">
+        <strong>Don't have an account?</strong>
+        <a href="register.html" style="color:var(--blue); font-weight:500; text-decoration:none;">
+          Create one here
+        </a>
+      </div>
+
+    </div>
+ 
+
+  </div>
+  
+
+  <script>
+    const BACKEND = 'http://127.0.0.1:5000';
+
+    
+    function togglePassword() {
+      const field = document.getElementById('password');
+      const toggle = document.getElementById('pwToggle');
+      if (field.type === 'password') {
+        field.type = 'text';
+        toggle.textContent = 'Hide';
+      } else {
+        field.type = 'password';
+        toggle.textContent = 'Show';
+      }
+    }
+
+    function showError(msg) {
+      const box = document.getElementById('errorBox');
+      document.getElementById('errorMsg').textContent = msg;
+      box.style.display = 'flex';
+    }
+    function hideError() {
+      document.getElementById('errorBox').style.display = 'none';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      hideError();
+
+      const btn = document.getElementById('signinBtn');
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const remember = document.getElementById('rememberMe').checked;
+
+      btn.textContent = 'Signing in…';
+      btn.disabled = true;
+
+      if (window.location.protocol === 'file:') {
+        showError('Do not open this file directly. Open your browser and go to http://127.0.0.1:5000');
+        btn.textContent = 'Sign in';
+        btn.disabled = false;
+        return;
+      }
+
+      try {
+        const resp = await fetch(`${BACKEND}/login`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, remember }),
+        });
+
+        const data = await resp.json();
+
+        if (resp.ok && data.success) {
+          btn.textContent = 'Redirecting…';
+          window.location.href = 'index.html';  
+        } else {
+          showError(data.error || 'Login failed. Please try again.');
+          btn.textContent = 'Sign in';
+          btn.disabled = false;
+        }
+
+      } catch (err) {
+        showError(`Fetch failed. Protocol: ${window.location.protocol}. Origin: ${window.location.origin}. Error: ${err.message}`);
+        btn.textContent = 'Sign in';
+        btn.disabled    = false;
+      }
+    });
+
+    ['email', 'password'].forEach(id => {
+      document.getElementById(id).addEventListener('input', hideError);
+    });
+  </script>
+
+</body>
+
+</html>

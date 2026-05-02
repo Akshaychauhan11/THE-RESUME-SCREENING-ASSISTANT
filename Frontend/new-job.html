@@ -32,6 +32,7 @@
 
   <div class="main-layout">
 
+    
     <aside class="sidebar">
       <p class="sidebar-section-label">Steps</p>
 
@@ -62,14 +63,14 @@
         </div>
       </div>
 
-    
+      
       <div id="errorMsg" style="display:none; background:#FFF5F5; border:1px solid #FC8181; color:#C53030; padding:10px 14px; border-radius:6px; margin-bottom:16px; font-size:13px;"></div>
 
-     
+      
       <form id="jobForm">
         <div class="two-col">
 
-          
+ 
           <div>
             <div class="form-group">
               <label class="form-label" for="job-title">Job title</label>
@@ -99,7 +100,7 @@
             </div>
           </div>
 
-          
+    
           <div>
             <div class="form-group">
               <label class="form-label" for="jd">
@@ -119,7 +120,7 @@
           </div>
 
         </div>
-        <
+ 
 
         <hr class="divider" style="margin-top: 24px;">
 
@@ -140,6 +141,13 @@
 
 <script>
 
+const BACKEND = 'http://127.0.0.1:5000';
+
+
+fetch(`${BACKEND}/api/me`, { credentials: 'include' })
+  .then(r => { if (!r.ok) window.location.href = 'login.html'; })
+  .catch(() => { window.location.href = 'login.html'; });
+
 document.getElementById('jobForm').addEventListener('submit', async function(e) {
   e.preventDefault();
 
@@ -152,9 +160,10 @@ document.getElementById('jobForm').addEventListener('submit', async function(e) 
   const formData = new FormData(this);  
 
   try {
-    const response = await fetch('http://127.0.0.1:5000/api/create-job', {
+    const response = await fetch(`${BACKEND}/api/create-job`, {
       method : 'POST',
-      body   : formData,   
+      body   : formData,
+      credentials: 'include',
     });
 
     const data = await response.json();

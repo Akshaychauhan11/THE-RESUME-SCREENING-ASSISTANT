@@ -32,7 +32,7 @@
 
   <div class="main-layout">
 
-   
+    
     <aside class="sidebar">
       <p class="sidebar-section-label">Steps</p>
 
@@ -56,8 +56,8 @@
       <hr class="divider">
 
       <p class="sidebar-meta-label">Job</p>
-      <p class="sidebar-meta-value">Python ML Engineer</p>
-      <p class="sidebar-meta-sub">Engineering · Full-time</p>
+      <p class="sidebar-meta-value" id="sidebarJobTitle">Loading…</p>
+      <p class="sidebar-meta-sub" id="sidebarJobMeta">—</p>
     </aside>
 
     <main class="content">
@@ -69,13 +69,12 @@
         </div>
       </div>
 
-  
+      
       <div id="errorMsg" style="display:none; background:#FFF5F5; border:1px solid #FC8181; color:#C53030; padding:10px 14px; border-radius:6px; margin-bottom:16px; font-size:13px;"></div>
 
- 
       <form id="uploadForm">
 
-      
+
         <div class="upload-zone" id="dropzone" onclick="document.getElementById('fileInput').click()">
           <div class="upload-zone-icon">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -85,7 +84,7 @@
           </div>
           <p class="upload-zone-title">Drop PDF resumes here</p>
           <p class="upload-zone-hint">or click to browse files &nbsp;·&nbsp; PDF only &nbsp;·&nbsp; Max 10MB per file</p>
-        
+          
           <input
             type="file"
             id="fileInput"
@@ -97,9 +96,10 @@
           >
         </div>
 
-
+        
         <div id="fileList" class="file-list" style="display: none;"></div>
 
+ 
         <p id="fileCount" class="text-muted text-small mb-16" style="display: none;"></p>
 
         <hr class="divider">
@@ -128,9 +128,28 @@
 </div>
 
 <script>
-  
+
+  const BACKEND   = 'http://127.0.0.1:5000';
   const urlParams = new URLSearchParams(window.location.search);
   const jobId     = urlParams.get('job_id');
+
+
+  fetch(`${BACKEND}/api/me`, { credentials: 'include' })
+    .then(r => { if (!r.ok) window.location.href = 'login.html'; })
+    .catch(() => { window.location.href = 'login.html'; });
+
+
+  if (jobId) {
+    fetch(`${BACKEND}/api/jobs/${jobId}/results`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.job) {
+          document.getElementById('sidebarJobTitle').textContent = data.job.job_title;
+          document.getElementById('sidebarJobMeta').textContent  = data.job.status || 'Active';
+        }
+      })
+      .catch(() => {});
+  }
 
   if (!jobId) {
     
@@ -220,13 +239,14 @@
     const formData = new FormData();
     formData.append('job_id', jobId);
     Array.from(selectedFiles).forEach(file => {
-      formData.append('resumes', file);   
+      formData.append('resumes', file); 
     });
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/upload-resumes', {
+      const response = await fetch(`${BACKEND}/api/upload-resumes`, {
         method : 'POST',
         body   : formData,
+        credentials: 'include',
       });
 
       const data = await response.json();
@@ -239,7 +259,7 @@
         return;
       }
 
-  
+      
       window.location.href = 'results.html?job_id=' + jobId;
 
     } catch (err) {
