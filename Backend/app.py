@@ -1,34 +1,183 @@
 from datetime import datetime, timezone
+from functools import wraps
 
 from bson import ObjectId
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, session, redirect, send_file
 from flask_cors import CORS
 from pymongo import MongoClient
+from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-
 from ml_engine import extract_text_from_file_storage, score_resumes
 
 app = Flask(__name__)
 
-CORS(app)
+
+import secrets as _secrets
+_secret_key = os.getenv("SECRET_KEY")
+if not _secret_key:
+    _secret_key = _secrets.token_hex(32)
+    print("[WARNING] SECRET_KEY not found in .env — using a random temporary key.")
+    print("[WARNING] Add SECRET_KEY=<a-long-random-string> to your .env file.")
+app.secret_key = _secret_key
+
+CORS(app, supports_credentials=True, origins=[
+    "http://127.0.0.1:3002", 
+    "http://localhost:3002",
+    "http://127.0.0.1:5000",
+    "http://localhost:5000"
+])
+
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 MB
+
+@app.errorhandler(413)
+def file_too_large(e):
+    return jsonify({
+        "error": "Upload too large. Maximum allowed size is 10 MB per request."
+    }), 413
+
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('user_id'):
+            return jsonify({'error': 'Authentication required.'}), 401
+        return f(*args, **kwargs)
+    return decorated
 
 mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
 client = MongoClient(mongo_uri)
 db     = client["talentscreen"]      
 
 jobs_col       = db["jobs"]          
-candidates_col = db["candidates"]   
+candidates_col = db["candidates"]    
+users_col      = db["users"]         
+
+
+
+LOGIN_HTML   = os.path.join(os.path.dirname(__file__), "..", "Frontend", "login.html")
+FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "..", "Frontend")
+
+
+@app.route("/styles/<path:filename>")
+def serve_styles(filename):
+    return send_file(os.path.abspath(os.path.join(FRONTEND_DIR, "styles", filename)))
 
 @app.route("/")
 def index():
-    return jsonify({ "status": "ResumeScreening backend is running ✓" })
+    if not session.get("user_id"):
+        return redirect("/login")
+    return send_file(os.path.abspath(os.path.join(FRONTEND_DIR, "index.html")))
+
+@app.route("/<path:filename>")
+def serve_html(filename):
+    if filename.endswith(".html"):
+        return send_file(os.path.abspath(os.path.join(FRONTEND_DIR, filename)))
+    return "Not found", 404
+
+
+@app.route("/login", methods=["GET"])
+def login_page():
+    if session.get("user_id"):
+        return redirect("/")
+    return send_file(os.path.abspath(LOGIN_HTML))
+
+
+
+
+@app.route("/login", methods=["POST"])
+def login_submit():
+    data     = request.get_json(silent=True) or {}
+    email    = (data.get("email")    or request.form.get("email",    "")).strip().lower()
+    password = (data.get("password") or request.form.get("password", ""))
+    remember = data.get("remember",  True)
+
+    if not email or not password:
+        return jsonify({ "error": "Email and password are required." }), 400
+
+    user = users_col.find_one({ "email": email })
+
+    if not user or not check_password_hash(user["password_hash"], password):
+        print(f"[login] Failed attempt for: {email}")
+        return jsonify({ "error": "Invalid email or password. Please try again." }), 401
+
+    
+    session.permanent = bool(remember)
+    session["user_id"] = str(user["_id"])
+    session["name"]    = user.get("name", email)
+    session["email"]   = email
+
+    users_col.update_one(
+        { "_id": user["_id"] },
+        { "$set": { "last_login": datetime.now(timezone.utc) } }
+    )
+
+    print(f"[login] Successful login: {email}")
+    return jsonify({ "success": True, "name": session["name"] })
+
+
+@app.route("/logout")
+def logout():
+    name = session.get("email", "unknown")
+    session.clear()
+    print(f"[logout] User logged out: {name}")
+    return jsonify({"success": True})
+
+
+@app.route("/api/me", methods=["GET"])
+def get_me():
+    if not session.get("user_id"):
+        return jsonify({ "error": "Not authenticated." }), 401
+    return jsonify({
+        "user_id": session["user_id"],
+        "name":    session["name"],
+        "email":   session["email"],
+    })
+
+
+@app.route("/api/register", methods=["POST"])
+def register():
+    data  = request.get_json(silent=True) or {}
+    name  = data.get("name",             "").strip()
+    email = data.get("email",            "").strip().lower()
+    pwd   = data.get("password",         "")
+    cpwd  = data.get("confirm_password", "")
+
+    
+    if not name:
+        return jsonify({ "error": "Full name is required." }), 400
+    if not email or "@" not in email:
+        return jsonify({ "error": "A valid email address is required." }), 400
+    if len(pwd) < 6:
+        return jsonify({ "error": "Password must be at least 6 characters." }), 400
+    if pwd != cpwd:
+        return jsonify({ "error": "Passwords do not match." }), 400
+
+    
+    if users_col.find_one({ "email": email }):
+        return jsonify({ "error": "An account with this email already exists." }), 409
+
+    
+    user_doc = {
+        "name":          name,
+        "email":         email,
+        "password_hash": generate_password_hash(pwd),
+        "role":          "hr",
+        "created_at":    datetime.now(timezone.utc),
+        "last_login":    None,
+    }
+    result = users_col.insert_one(user_doc)
+    print(f"[register] New user created: {email}  _id={result.inserted_id}")
+
+    return jsonify({ "success": True, "message": "Account created! You can now sign in." })
+
 
 @app.route("/api/create-job", methods=["POST"])
+@login_required
 def create_job():
+
     job_title       = request.form.get("job_title",       "").strip()
     job_description = request.form.get("job_description", "").strip()
     department      = request.form.get("department",      "").strip()
@@ -62,11 +211,13 @@ def create_job():
     })
 
 @app.route("/api/upload-resumes", methods=["POST"])
+@login_required
 def upload_resumes():
     job_id = request.form.get("job_id", "").strip()
 
     if not job_id:
         return jsonify({ "error": "job_id is missing." }), 400
+
     try:
         job = jobs_col.find_one({ "_id": ObjectId(job_id) })
     except Exception:
@@ -75,6 +226,7 @@ def upload_resumes():
     if not job:
         return jsonify({ "error": f"No job found with id: {job_id}" }), 404
 
+    
     uploaded_files = request.files.getlist("resumes")
 
     if not uploaded_files:
@@ -98,8 +250,11 @@ def upload_resumes():
     if not resumes_dict:
         return jsonify({ "error": "Could not extract text from any uploaded PDF. Are they scanned images?" }), 400
 
+    jd_text = job["job_description"]
+    if job.get("key_skills", "").strip():
+        jd_text = jd_text + "\n" + job["key_skills"]
 
-    scored = score_resumes(job["job_description"], resumes_dict)
+    scored = score_resumes(jd_text, resumes_dict)
 
     candidates_col.delete_many({ "job_id": job_id })
 
@@ -135,9 +290,10 @@ def upload_resumes():
         "count":   len(scored),
     })
 
-
 @app.route("/api/jobs/<job_id>/results", methods=["GET"])
+@login_required
 def get_results(job_id):
+    
     try:
         job = jobs_col.find_one({ "_id": ObjectId(job_id) })
     except Exception:
@@ -146,6 +302,7 @@ def get_results(job_id):
     if not job:
         return jsonify({ "error": "Job not found." }), 404
 
+   
     cursor     = candidates_col.find({ "job_id": job_id }).sort("rank", 1)
     candidates = []
 
@@ -170,9 +327,10 @@ def get_results(job_id):
         "candidates": candidates,
     })
 
-
 @app.route("/api/history", methods=["GET"])
+@login_required
 def get_history():
+    
     cursor = jobs_col.find({}).sort("created_at", -1)
     jobs   = []
 
@@ -188,9 +346,8 @@ def get_history():
 
     return jsonify(jobs)
 
-
-
 @app.route("/api/candidates/<candidate_id>", methods=["GET"])
+@login_required
 def get_candidate(candidate_id):
     try:
         c = candidates_col.find_one({ "_id": ObjectId(candidate_id) })
@@ -217,4 +374,5 @@ if __name__ == "__main__":
     print("  TalentScreen backend starting…")
     print("  Open: http://127.0.0.1:5000")
     print("=" * 55)
-    app.run(debug=True, port=5000)
+    
+    app.run(debug=False, port=5000)
